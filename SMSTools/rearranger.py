@@ -7,7 +7,7 @@ EXIT_FAILURE = 1
 EOF = (-1)
 
 
-class Converter:
+class Rearranger:
 	def __init__(self:object, prefix:bytes = b"\"_id\":\"", suffix:bytes = b"\"") -> object:
 		self.__prefix = prefix if isinstance(prefix, bytes) else b"\"_id\":\""
 		self.__suffix = suffix if isinstance(suffix, bytes) else b"\""
@@ -35,7 +35,7 @@ class Converter:
 						if 40 == stack[-1]:
 							stack.pop()
 						else:
-							raise ValueError("Failed to pop \'(\' when meeting '\)\'. ")
+							raise ValueError("Failed to pop \'(\' when meeting \')\'. ")
 				elif 92 == content[idx]: # '\\'
 					buffer += content[idx:idx + 2]
 					idx += 2
@@ -45,13 +45,13 @@ class Converter:
 						if 91 == stack[-1]:
 							stack.pop()
 						else:
-							raise ValueError("Failed to pop \'[\' when meeting '\]\'. ")
+							raise ValueError("Failed to pop \'[\' when meeting \']\'. ")
 				elif 125 == content[idx]: # '}'
 					if not quotation:
 						if 123 == stack[-1]:
 							stack.pop()
 						else:
-							raise ValueError("Failed to pop \'{\' when meeting '\}\'. ")
+							raise ValueError("Failed to pop \'{\' when meeting \'}\'. ")
 				buffer += content[idx:idx + 1]
 				idx += 1
 			if buffer and buffer != b'\n':
@@ -59,7 +59,7 @@ class Converter:
 			return len(self.__items)
 		except BaseException as e:
 			return e
-	def convert(self:object) -> int|BaseException:
+	def rearrange(self:object) -> int|BaseException:
 		pattern, count = self.__prefix + b"\\d+" + self.__suffix, 0
 		for idx in range(len(self.__items) - 1, -1, -1):
 			iters = tuple(finditer(pattern, self.__items[idx]))
@@ -82,34 +82,52 @@ class Converter:
 def main() -> int:
 	# Parameters #
 	originalNdjsonFilePath, targetNdjsonFilePath = "messages.ndjson", "output.ndjson"
-	converter = Converter()
+	rearranger = Rearranger()
 	
 	# Reading #
-	readCount = converter.readFile(originalNdjsonFilePath)
+	readCount = rearranger.readFile(originalNdjsonFilePath)
 	if isinstance(readCount, int):
 		print("Successfully loaded {0} item(s) from \"{1}\". ".format(readCount, originalNdjsonFilePath))
 	else:
 		print("Failed to read \"{0}\". Details are as follows. \n\t{1}".format(originalNdjsonFilePath, "The program is interrupted by users. " if isinstance(readCount, KeyboardInterrupt) else readCount))
-		return EOF
+		exitCode = EOF
+		try:
+			print("Please press the enter key to exit ({0}). ".format(exitCode))
+			input()
+		except:
+			print()
+		return exitCode
 	
-	# Converting #
-	convertedCount = converter.convert()
-	if isinstance(convertedCount, int):
-		print("Successfully converted {0} item(s). ".format(convertedCount))
+	# Rearranging #
+	rearrangedCount = rearranger.rearrange()
+	if isinstance(rearrangedCount, int):
+		print("Successfully rearranged {0} item(s). ".format(rearrangedCount))
 	else:
-		print("Failed to convert. Details are as follows. \n\t{0}".format("The program is interrupted by users. " if isinstance(convertedCount, KeyboardInterrupt) else convertedCount))
-		return EXIT_FAILURE
+		print("Failed to rearrange. Details are as follows. \n\t{0}".format("The program is interrupted by users. " if isinstance(rearrangedCount, KeyboardInterrupt) else rearrangedCount))
+		exitCode = EXIT_FAILURE
+		try:
+			print("Please press the enter key to exit ({0}). ".format(exitCode))
+			input()
+		except:
+			print()
+		return exitCode
 	
 	# Writing #
-	writtenCount = converter.writeFile(targetNdjsonFilePath)
+	writtenCount = rearranger.writeFile(targetNdjsonFilePath)
 	if isinstance(writtenCount, int):
 		print("Successfully wrote {0} item(s) to \"{1}\". ".format(writtenCount, targetNdjsonFilePath))
 	else:
 		print("Failed to write to \"{0}\". Details are as follows. \n\t{1}".format(targetNdjsonFilePath, "The program is interrupted by users. " if isinstance(writtenCount, KeyboardInterrupt) else writtenCount))
-		return EOF
+		exitCode = EOF
+		try:
+			print("Please press the enter key to exit ({0}). ".format(exitCode))
+			input()
+		except:
+			print()
+		return exitCode
 	
 	# Returning #
-	exitCode = EXIT_SUCCESS if isinstance(convertedCount, int) and readCount == convertedCount == writtenCount else EXIT_FAILURE
+	exitCode = EXIT_SUCCESS if isinstance(rearrangedCount, int) and readCount == rearrangedCount == writtenCount else EXIT_FAILURE
 	try:
 		print("Please press the enter key to exit ({0}). ".format(exitCode))
 		input()
