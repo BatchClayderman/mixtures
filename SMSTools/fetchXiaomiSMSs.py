@@ -14,6 +14,7 @@ class Fetcher:
 		self.__messageID = initialMessageID if isinstance(initialMessageID, int) and initialMessageID >= 1 else 1
 		self.__threadID = initialThreadID if isinstance(initialThreadID, int) and initialThreadID >= 1 else 1
 	def __parseHtml(self:object, content:str) -> list:
+		messages = []
 		soup = BeautifulSoup(content, "html.parser")
 		consoles = soup.find_all("div", class_ = "container-2Q5xm")
 		for console in consoles:
@@ -38,7 +39,6 @@ class Fetcher:
 						bodies.append(element.contents[0])
 					elif "send-3QTdp" in element["class"] and "messageDetail-1_W9O" in element["class"]: # sMsg
 						bodies.append(element.contents[0])
-			messages = []
 			for idx in range(len(bodies)):
 				messages.append(												\
 					{													\
@@ -91,7 +91,7 @@ def main() -> int:
 				print("Failed to proceed due to the following exception. \n\t{0}".format(e))
 				errorLevel = EOF
 		else:
-			print("No HTML files were found. ")
+			print("No valid Xiaomi HTML files were found. ")
 			errorLevel = EOF
 	else:
 		print("Unknown exceptions occurred. ")
