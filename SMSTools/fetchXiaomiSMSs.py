@@ -9,10 +9,11 @@ EOF = (-1)
 
 
 class Fetcher:
-	def __init__(self:object, folderPath:str, initialMessageID:int = 1, initialThreadID:int = 1) -> object:
+	def __init__(self:object, folderPath:str, initialMessageID:int = 1, initialThreadID:int = 1, offset:int = 10000) -> object:
 		self.__folderPath = folderPath
 		self.__messageID = initialMessageID if isinstance(initialMessageID, int) and initialMessageID >= 1 else 1
 		self.__threadID = initialThreadID if isinstance(initialThreadID, int) and initialThreadID >= 1 else 1
+		self.__offset = offset if isinstance(offset, int) and 1 <= offset <= 30000 else 10000 # set to 1 if too many messages are sent and received in a minute (maximum 60000)
 	def __parseHtml(self:object, content:str) -> list:
 		messages = []
 		soup = BeautifulSoup(content, "html.parser")
@@ -28,11 +29,9 @@ class Fetcher:
 						address = element.contents[0].replace(" ", "").replace("-", "")
 					elif "date-cYYud" in element["class"]:
 						dt = tuple(int(integer) for integer in findall("\\d+", element.contents[0]))
-						ts = int(datetime(*dt).timestamp())
-						if timestamps and timestamps[-1] // 1000 == ts: # to avoid wrong orders
-							ts = ts * 1000 + timestamps[-1] % 1000 + 1
-						else:
-							ts *= 1000
+						ts = int(datetime(*dt).timestamp()) * 1000
+						if timestamps and timestamps[-1] // 60000 == ts // 60000: # to avoid wrong orders
+							ts = timestamps[-1] + self.__offset
 						timestamps.append(ts)
 						types.append("2" if "send-date-RQHgG" in element["class"] else "1")
 					elif "receive-SLIkS" in element["class"] and "messageDetail-1_W9O" in element["class"]: # rMsg
@@ -43,7 +42,7 @@ class Fetcher:
 				messages.append(												\
 					{													\
 						"_id":str(self.__messageID), "thread_id":str(self.__threadID), "address":str(address), 		\
-						"date":str(timestamps[idx]), "date_sent":timestamps[idx], "protocol":"0", "read":"1", 		\
+						"date":str(timestamps[idx]), "date_sent":str(timestamps[idx]), "protocol":"0", "read":"1", 	\
 						"status":"-1", "type":str(types[idx]), "reply_path_present":"0", "body":bodies[idx], 		\
 						"locked":"0", "sub_id":str(idx), "phone_id":"-1", "error_code":"-1", 				\
 						"creator":"com.google.android.apps.messaging", "seen":"1", "priority":"-1", 			\

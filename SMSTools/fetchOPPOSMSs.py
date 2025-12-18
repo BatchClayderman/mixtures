@@ -53,7 +53,7 @@ class Fetcher:
 							messages.append(												\
 								{													\
 									"_id":str(self.__messageID), "thread_id":str(self.__threadID), "address":str(address), 		\
-									"date":str(timestamps[idx]), "date_sent":timestamps[idx], "protocol":"0", "read":"1", 		\
+									"date":str(timestamps[idx]), "date_sent":str(timestamps[idx]), "protocol":"0", "read":"1", 	\
 									"status":"-1", "type":str(types[idx]), "reply_path_present":"0", "body":bodies[idx], 		\
 									"locked":"0", "sub_id":str(idx), "phone_id":"-1", "error_code":"-1", 				\
 									"creator":"com.google.android.apps.messaging", "seen":"1", "priority":"-1", 			\
