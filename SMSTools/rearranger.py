@@ -59,13 +59,13 @@ class Rearranger:
 			return len(self.__items)
 		except BaseException as e:
 			return e
-	def rearrange(self:object) -> int|BaseException:
-		pattern, count = self.__prefix + b"\\d+" + self.__suffix, 0
-		for idx in range(len(self.__items) - 1, -1, -1):
+	def rearrange(self:object, initialValue:int = 0, stepValue:int = 1) -> int|BaseException:
+		pattern, count, step = self.__prefix + b"\\d+" + self.__suffix, initialValue if isinstance(initialValue, int) else 0, stepValue if isinstance(stepValue, int) else 1
+		for idx in range(len(self.__items)):
 			iters = tuple(finditer(pattern, self.__items[idx]))
 			if len(iters) >= 1:
 				startIdx, endIdx = iters[0].start(), iters[0].end()
-				count += 1
+				count += step
 				target = self.__prefix + str(count).encode("utf-8") + self.__suffix
 				self.__items[idx] = self.__items[idx][:startIdx] + target + self.__items[idx][endIdx:]
 		return count
