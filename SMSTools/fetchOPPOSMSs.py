@@ -9,11 +9,11 @@ EOF = (-1)
 
 
 class Fetcher:
-	def __init__(self:object, folderPath:str, initialMessageID:int = 1, initialThreadID:int = 1, offset:int = 1000) -> object:
+	def __init__(self:object, folderPath:str, initialMessageID:int = 1, initialThreadID:int = 1, offset:int = 10000) -> object:
 		self.__folderPath = folderPath
 		self.__messageID = initialMessageID if isinstance(initialMessageID, int) and initialMessageID >= 1 else 1
 		self.__threadID = initialThreadID if isinstance(initialThreadID, int) and initialThreadID >= 1 else 1
-		self.__offset = offset if isinstance(offset, int) and 1 <= offset <= 30000 else 1000 # set to 1 if too many messages are sent and received in a minute
+		self.__offset = offset if isinstance(offset, int) and 1 <= offset <= 30000 else 10000 # set to 1 if too many messages are sent and received in a minute (maximum 60000)
 	def __parseHtml(self:object, content:str) -> list:
 		messages = []
 		soup = BeautifulSoup(content, "html.parser")
@@ -30,7 +30,7 @@ class Fetcher:
 										if (													\
 											"div" == subElement.name and subElement.has_attr("class") and "item_bg" in subElement["class"]	\
 											and not (											\
-												timestamps and timestamps[-1] // 1000 == lastTimestamp // 1000				\
+												timestamps and timestamps[-1] // 60000 == lastTimestamp // 60000			\
 												and bodies and bodies[-1] == subElement.contents[0]					\
 											) # filter repeated backups									\
 										):
@@ -41,11 +41,11 @@ class Fetcher:
 							elif "li" == element.name and element.has_attr("class"):
 								if "date_key" in element["class"]:
 									dt = tuple(int(integer) for integer in findall("\\d+", str(element.contents[0])))
-									ts = int(datetime(*dt).timestamp())
-									if isinstance(lastTimestamp, int) and lastTimestamp // 1000 == ts:
-										lastTimestamp = ts * 1000 + lastTimestamp % 1000 + self.__offset # to avoid wrong orders
+									ts = int(datetime(*dt).timestamp()) * 1000
+									if isinstance(lastTimestamp, int) and lastTimestamp // 60000 == ts // 60000:
+										lastTimestamp += self.__offset # to avoid wrong orders
 									else:
-										lastTimestamp = ts * 1000
+										lastTimestamp = ts
 							elif "p" == element.name and element.has_attr("class"):
 								if "address" in element["class"]: # address
 									address = element.contents[0].replace("TEL:", "").replace(" ", "").replace("-", "")
